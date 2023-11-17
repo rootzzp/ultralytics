@@ -117,6 +117,7 @@ class TQDM(tqdm_original):
     """
 
     def __init__(self, *args, **kwargs):
+        """Initialize custom Ultralytics tqdm class with different default arguments."""
         # Set new default values (these can still be overridden when calling TQDM)
         kwargs['disable'] = not VERBOSE or kwargs.get('disable', False)  # logical 'and' with default value if passed
         kwargs.setdefault('bar_format', TQDM_BAR_FORMAT)  # override default value if passed
@@ -124,8 +125,7 @@ class TQDM(tqdm_original):
 
 
 class SimpleClass:
-    """
-    Ultralytics SimpleClass is a base class providing helpful string representation, error reporting, and attribute
+    """Ultralytics SimpleClass is a base class providing helpful string representation, error reporting, and attribute
     access methods for easier debugging and usage.
     """
 
@@ -154,8 +154,7 @@ class SimpleClass:
 
 
 class IterableSimpleNamespace(SimpleNamespace):
-    """
-    Ultralytics IterableSimpleNamespace is an extension class of SimpleNamespace that adds iterable functionality and
+    """Ultralytics IterableSimpleNamespace is an extension class of SimpleNamespace that adds iterable functionality and
     enables usage with dict() and for loops.
     """
 
@@ -256,8 +255,8 @@ class EmojiFilter(logging.Filter):
     """
     A custom logging filter class for removing emojis in log messages.
 
-    This filter is particularly useful for ensuring compatibility with Windows terminals
-    that may not support the display of emojis in log messages.
+    This filter is particularly useful for ensuring compatibility with Windows terminals that may not support the
+    display of emojis in log messages.
     """
 
     def filter(self, record):
@@ -271,13 +270,15 @@ set_logging(LOGGING_NAME, verbose=VERBOSE)  # run before defining LOGGER
 LOGGER = logging.getLogger(LOGGING_NAME)  # define globally (used in train.py, val.py, detect.py, etc.)
 if WINDOWS:  # emoji-safe logging
     LOGGER.addFilter(EmojiFilter())
+for logger in 'sentry_sdk', 'urllib3.connectionpool':
+    logging.getLogger(logger).setLevel(logging.CRITICAL)
 
 
 class ThreadingLocked:
     """
-    A decorator class for ensuring thread-safe execution of a function or method.
-    This class can be used as a decorator to make sure that if the decorated function
-    is called from multiple threads, only one thread at a time will be able to execute the function.
+    A decorator class for ensuring thread-safe execution of a function or method. This class can be used as a decorator
+    to make sure that if the decorated function is called from multiple threads, only one thread at a time will be able
+    to execute the function.
 
     Attributes:
         lock (threading.Lock): A lock object used to manage access to the decorated function.
@@ -294,13 +295,16 @@ class ThreadingLocked:
     """
 
     def __init__(self):
+        """Initializes the decorator class for thread-safe execution of a function or method."""
         self.lock = threading.Lock()
 
     def __call__(self, f):
+        """Run thread-safe execution of function or method."""
         from functools import wraps
 
         @wraps(f)
         def decorated(*args, **kwargs):
+            """Applies thread-safety to the decorated function or method."""
             with self.lock:
                 return f(*args, **kwargs)
 
@@ -424,8 +428,7 @@ def is_kaggle():
 
 def is_jupyter():
     """
-    Check if the current script is running inside a Jupyter Notebook.
-    Verified on Colab, Jupyterlab, Kaggle, Paperspace.
+    Check if the current script is running inside a Jupyter Notebook. Verified on Colab, Jupyterlab, Kaggle, Paperspace.
 
     Returns:
         (bool): True if running inside a Jupyter Notebook, False otherwise.
@@ -529,8 +532,8 @@ def is_github_actions_ci() -> bool:
 
 def is_git_dir():
     """
-    Determines whether the current file is part of a git repository.
-    If the current file is not part of a git repository, returns None.
+    Determines whether the current file is part of a git repository. If the current file is not part of a git
+    repository, returns None.
 
     Returns:
         (bool): True if current file is part of a git repository.
@@ -540,8 +543,8 @@ def is_git_dir():
 
 def get_git_dir():
     """
-    Determines whether the current file is part of a git repository and if so, returns the repository root directory.
-    If the current file is not part of a git repository, returns None.
+    Determines whether the current file is part of a git repository and if so, returns the repository root directory. If
+    the current file is not part of a git repository, returns None.
 
     Returns:
         (Path | None): Git root directory if found or None if not found.
@@ -578,7 +581,8 @@ def get_git_branch():
 
 
 def get_default_args(func):
-    """Returns a dictionary of default arguments for a function.
+    """
+    Returns a dictionary of default arguments for a function.
 
     Args:
         func (callable): The function to inspect.
@@ -705,12 +709,16 @@ def remove_colorstr(input_string):
         >>> remove_colorstr(colorstr('blue', 'bold', 'hello world'))
         >>> 'hello world'
     """
-    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    ansi_escape = re.compile(r'\x1B\[[0-9;]*[A-Za-z]')
     return ansi_escape.sub('', input_string)
 
 
 class TryExcept(contextlib.ContextDecorator):
-    """YOLOv8 TryExcept class. Usage: @TryExcept() decorator or 'with TryExcept():' context manager."""
+    """
+    YOLOv8 TryExcept class.
+
+    Use as @TryExcept() decorator or 'with TryExcept():' context manager.
+    """
 
     def __init__(self, msg='', verbose=True):
         """Initialize TryExcept class with optional message and verbosity settings."""
@@ -729,7 +737,11 @@ class TryExcept(contextlib.ContextDecorator):
 
 
 def threaded(func):
-    """Multi-threads a target function and returns thread. Usage: @threaded decorator."""
+    """
+    Multi-threads a target function and returns thread.
+
+    Use as @threaded decorator.
+    """
 
     def wrapper(*args, **kwargs):
         """Multi-threads a given function and returns the thread."""
@@ -809,10 +821,6 @@ def set_sentry():
             ignore_errors=[KeyboardInterrupt, FileNotFoundError])
         sentry_sdk.set_user({'id': SETTINGS['uuid']})  # SHA-256 anonymized UUID hash
 
-        # Disable all sentry logging
-        for logger in 'sentry_sdk', 'sentry_sdk.errors':
-            logging.getLogger(logger).setLevel(logging.CRITICAL)
-
 
 class SettingsManager(dict):
     """
@@ -824,6 +832,9 @@ class SettingsManager(dict):
     """
 
     def __init__(self, file=SETTINGS_YAML, version='0.0.4'):
+        """Initialize the SettingsManager with default settings, load and validate current settings from the YAML
+        file.
+        """
         import copy
         import hashlib
 
@@ -917,7 +928,8 @@ def url2file(url):
 PREFIX = colorstr('Ultralytics: ')
 SETTINGS = SettingsManager()  # initialize settings
 DATASETS_DIR = Path(SETTINGS['datasets_dir'])  # global datasets directory
-WEIGHTS_DIR = Path(SETTINGS['weights_dir'])
+WEIGHTS_DIR = Path(SETTINGS['weights_dir'])  # global weights directory
+RUNS_DIR = Path(SETTINGS['runs_dir'])  # global runs directory
 ENVIRONMENT = 'Colab' if is_colab() else 'Kaggle' if is_kaggle() else 'Jupyter' if is_jupyter() else \
     'Docker' if is_docker() else platform.system()
 TESTS_RUNNING = is_pytest_running() or is_github_actions_ci()

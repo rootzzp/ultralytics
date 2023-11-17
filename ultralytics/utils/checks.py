@@ -64,8 +64,8 @@ def parse_requirements(file_path=ROOT.parent / 'requirements.txt', package=''):
 
 def parse_version(version='0.0.0') -> tuple:
     """
-    Convert a version string to a tuple of integers, ignoring any extra non-numeric string attached to the version.
-    This function replaces deprecated 'pkg_resources.parse_version(v)'
+    Convert a version string to a tuple of integers, ignoring any extra non-numeric string attached to the version. This
+    function replaces deprecated 'pkg_resources.parse_version(v)'.
 
     Args:
         version (str): Version string, i.e. '2.0.1+cpu'
@@ -165,16 +165,16 @@ def check_version(current: str = '0.0.0',
 
     Example:
         ```python
-        # check if current version is exactly 22.04
+        # Check if current version is exactly 22.04
         check_version(current='22.04', required='==22.04')
 
-        # check if current version is greater than or equal to 22.04
+        # Check if current version is greater than or equal to 22.04
         check_version(current='22.10', required='22.04')  # assumes '>=' inequality if none passed
 
-        # check if current version is less than or equal to 22.04
+        # Check if current version is less than or equal to 22.04
         check_version(current='22.04', required='<=22.04')
 
-        # check if current version is between 20.04 (inclusive) and 22.04 (exclusive)
+        # Check if current version is between 20.04 (inclusive) and 22.04 (exclusive)
         check_version(current='21.10', required='>20.04,<22.04')
         ```
     """
@@ -372,8 +372,10 @@ def check_torchvision():
     Checks the installed versions of PyTorch and Torchvision to ensure they're compatible.
 
     This function checks the installed versions of PyTorch and Torchvision, and warns if they're incompatible according
-    to the provided compatibility table based on https://github.com/pytorch/vision#installation. The
-    compatibility table is a dictionary where the keys are PyTorch versions and the values are lists of compatible
+    to the provided compatibility table based on:
+    https://github.com/pytorch/vision#installation.
+
+    The compatibility table is a dictionary where the keys are PyTorch versions and the values are lists of compatible
     Torchvision versions.
     """
 
@@ -424,6 +426,14 @@ def check_yolov5u_filename(file: str, verbose: bool = True):
     return file
 
 
+def check_model_file_from_stem(model='yolov8n'):
+    """Return a model filename from a valid model stem."""
+    if model and not Path(model).suffix and Path(model).stem in downloads.GITHUB_ASSETS_STEMS:
+        return Path(model).with_suffix('.pt')  # add suffix, i.e. yolov8n -> yolov8n.pt
+    else:
+        return model
+
+
 def check_file(file, suffix='', download=True, hard=True):
     """Search/download file (if necessary) and return path."""
     check_suffix(file, suffix)  # optional
@@ -431,7 +441,7 @@ def check_file(file, suffix='', download=True, hard=True):
     file = check_yolov5u_filename(file)  # yolov5n -> yolov5nu
     if not file or ('://' not in file and Path(file).exists()):  # exists ('://' check required in Windows Python<3.10)
         return file
-    elif download and file.lower().startswith(('https://', 'http://', 'rtsp://', 'rtmp://')):  # download
+    elif download and file.lower().startswith(('https://', 'http://', 'rtsp://', 'rtmp://', 'tcp://')):  # download
         url = file  # warning: Pathlib turns :// -> :/
         file = url2file(file)  # '%2F' to '/', split https://url.com/file.txt?auth
         if Path(file).exists():
@@ -451,6 +461,23 @@ def check_file(file, suffix='', download=True, hard=True):
 def check_yaml(file, suffix=('.yaml', '.yml'), hard=True):
     """Search/download YAML file (if necessary) and return path, checking suffix."""
     return check_file(file, suffix, hard=hard)
+
+
+def check_is_path_safe(basedir, path):
+    """
+    Check if the resolved path is under the intended directory to prevent path traversal.
+
+    Args:
+        basedir (Path | str): The intended directory.
+        path (Path | str): The path to check.
+
+    Returns:
+        (bool): True if the path is safe, False otherwise.
+    """
+    base_dir_resolved = Path(basedir).resolve()
+    path_resolved = Path(path).resolve()
+
+    return path_resolved.is_file() and path_resolved.parts[:len(base_dir_resolved.parts)] == base_dir_resolved.parts
 
 
 def check_imshow(warn=False):
@@ -527,9 +554,9 @@ def collect_system_info():
 
 def check_amp(model):
     """
-    This function checks the PyTorch Automatic Mixed Precision (AMP) functionality of a YOLOv8 model.
-    If the checks fail, it means there are anomalies with AMP on the system that may cause NaN losses or zero-mAP
-    results, so AMP will be disabled during training.
+    This function checks the PyTorch Automatic Mixed Precision (AMP) functionality of a YOLOv8 model. If the checks
+    fail, it means there are anomalies with AMP on the system that may cause NaN losses or zero-mAP results, so AMP will
+    be disabled during training.
 
     Args:
         model (nn.Module): A YOLOv8 model instance.
@@ -606,7 +633,8 @@ def print_args(args: Optional[dict] = None, show_file=True, show_func=False):
 
 
 def cuda_device_count() -> int:
-    """Get the number of NVIDIA GPUs available in the environment.
+    """
+    Get the number of NVIDIA GPUs available in the environment.
 
     Returns:
         (int): The number of NVIDIA GPUs available.
@@ -626,7 +654,8 @@ def cuda_device_count() -> int:
 
 
 def cuda_is_available() -> bool:
-    """Check if CUDA is available in the environment.
+    """
+    Check if CUDA is available in the environment.
 
     Returns:
         (bool): True if one or more NVIDIA GPUs are available, False otherwise.
